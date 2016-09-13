@@ -1,7 +1,6 @@
 package de.endercookie.realistictime;
 
-import java.time.OffsetTime;
-import java.time.ZoneOffset;
+import de.endercookie.realistictime.thread.TimeThread;
 import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -21,8 +20,7 @@ public class RealisticTime extends JavaPlugin {
     @Getter
     private double longitude;
 
-    @Getter
-    private ZoneOffset localOffset;
+    private TimeThread thread;
 
     @Override
     public void onEnable() {
@@ -38,8 +36,8 @@ public class RealisticTime extends JavaPlugin {
 
         this.latitude = this.getConfig().getDouble("latitude", 0D);
         this.longitude = this.getConfig().getDouble("longitude", 0D);
-        this.localOffset = OffsetTime.now().getOffset();
-
+        this.thread = new TimeThread();
+        this.thread.runTaskTimer(this, 0, 1200);
     }
 
     @Override
