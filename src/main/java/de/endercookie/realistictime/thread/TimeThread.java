@@ -17,6 +17,8 @@ public class TimeThread extends BukkitRunnable {
 
     private OffsetDateTime next;
 
+    private Duration dur;
+
     private boolean night;
 
     private double factor;
@@ -27,17 +29,17 @@ public class TimeThread extends BukkitRunnable {
     private static final int DAY_LENGTH = 13065;
 
     public TimeThread() {
-        //Is night?
+        //Is it night?
         OffsetDateTime now = OffsetDateTime.now();
         OffsetDateTime set = SunMath.getSunset(RealisticTime.getInstance().getLatitude(), RealisticTime.getInstance().getLongitude(), now.getDayOfYear()).atDate(now.toLocalDate());
         if (now.isAfter(set)) {
             this.last = set;
-            this.next = SunMath.getSunrise(RealisticTime.getInstance().getLatitude(), RealisticTime.getInstance().getLongitude(), now.getDayOfYear() + 1).atDate(now.toLocalDate());
+            this.next = SunMath.getSunrise(RealisticTime.getInstance().getLatitude(), RealisticTime.getInstance().getLongitude(), now.getDayOfYear() + 1).atDate(now.toLocalDate().plusDays(1));
             this.night = true;
         } else {
             OffsetDateTime rise = SunMath.getSunrise(RealisticTime.getInstance().getLatitude(), RealisticTime.getInstance().getLongitude(), now.getDayOfYear()).atDate(now.toLocalDate());
             if (now.isBefore(rise)) {
-                this.last = SunMath.getSunrise(RealisticTime.getInstance().getLatitude(), RealisticTime.getInstance().getLongitude(), now.getDayOfYear() - 1).atDate(now.toLocalDate());
+                this.last = SunMath.getSunrise(RealisticTime.getInstance().getLatitude(), RealisticTime.getInstance().getLongitude(), now.getDayOfYear() - 1).atDate(now.toLocalDate().minusDays(1));
                 this.next = rise;
                 this.night = true;
             } else {
@@ -46,8 +48,7 @@ public class TimeThread extends BukkitRunnable {
                 this.night = false;
             }
         }
-
-        calcFactor();
+        this.dur = Duration.between(this.last, this.next);
     }
 
     @Override
@@ -57,20 +58,17 @@ public class TimeThread extends BukkitRunnable {
             this.last = this.next;
             this.night = !this.night;
             //        = night ? SunMath.getSunrise(.., .., now.getDayOfYear + 1) : SunMath.getSunset(.., .., now.getDayOfYear);
-            this.next = night ? SunMath.getSunrise(RealisticTime.getInstance().getLatitude(), RealisticTime.getInstance().getLongitude(), now.getDayOfYear() + 1).atDate(now.toLocalDate()) : SunMath.getSunset(RealisticTime.getInstance().getLatitude(), RealisticTime.getInstance().getLongitude(), now.getDayOfYear()).atDate(now.toLocalDate());
+            this.next = night ? SunMath.getSunrise(RealisticTime.getInstance().getLatitude(), RealisticTime.getInstance().getLongitude(), now.getDayOfYear() + 1).atDate(now.toLocalDate().plusDays(1)) : SunMath.getSunset(RealisticTime.getInstance().getLatitude(), RealisticTime.getInstance().getLongitude(), now.getDayOfYear()).atDate(now.toLocalDate());
+            this.dur = Duration.between(this.last, this.next);
         }
 
-        ticks = (short) (Duration.between(last, now).toMinutes() * factor);
-        ticks = (short) (night ? ticks + 11615 : ticks - 1450);
-        if (ticks < 0) {
-            ticks += 24000; // ticks = -1450 -> ticks = -1450 + 24000
-        } else if (ticks > 23999) {
-            ticks -= 24000; //ticks = 24500 -> ticks = 24500 - 24000
+        this.ticks = (short) ((Duration.between(this.last, now).toMinutes() / (double) dur.toMinutes()) * (night ? NIGHT_LENGTH : DAY_LENGTH));
+        this.ticks = (short) (this.night ? ticks + 11615 : this.ticks - 1450);
+        if (this.ticks < 0) {
+            this.ticks += 24000; // ticks = -1450 -> ticks = -1450 + 24000
+        } else if (this.ticks > 23999) {
+            this.ticks -= 24000; //ticks = 24500 -> ticks = 24500 - 24000
         }
-        Bukkit.getWorlds().forEach(w -> w.setTime(ticks));
-    }
-
-    private void calcFactor() {
-        factor = Duration.between(last, next).toMinutes() / (this.night ? TimeThread.NIGHT_LENGTH : TimeThread.DAY_LENGTH);
+        Bukkit.getWorlds().forEach(w -> w.setTime(this.ticks));
     }
 }

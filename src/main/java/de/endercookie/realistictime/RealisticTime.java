@@ -31,7 +31,7 @@ public class RealisticTime extends JavaPlugin {
         instance = this;
 
         Bukkit.getWorlds().forEach(w -> {
-            w.setGameRuleValue("doDaylightCircle", "false");
+            w.setGameRuleValue("doDaylightCycle", "false");
         });
 
         this.latitude = this.getConfig().getDouble("latitude", 0D);
