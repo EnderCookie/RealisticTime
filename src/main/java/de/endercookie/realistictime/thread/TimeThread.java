@@ -4,7 +4,6 @@ import de.endercookie.realistictime.RealisticTime;
 import de.endercookie.realistictime.math.SunMath;
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import org.bukkit.Bukkit;
 import org.bukkit.scheduler.BukkitRunnable;
 
 /**
@@ -69,6 +68,6 @@ public class TimeThread extends BukkitRunnable {
         } else if (this.ticks > 23999) {
             this.ticks -= 24000; //ticks = 24500 -> ticks = 24500 - 24000
         }
-        Bukkit.getWorlds().forEach(w -> w.setTime(this.ticks));
+        RealisticTime.getInstance().getWorlds().forEach(w -> w.setTime(this.ticks));
     }
 }

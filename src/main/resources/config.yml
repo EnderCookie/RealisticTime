@@ -1,3 +1,12 @@
 #default config.yml
+#Your location in map coordinates
 latitude: 0;
 longitude: 0;
+
+#Update rate of minecraft time in seconds
+update_rate: 60
+
+all_worlds: true
+#Only used if all_worlds = false
+worlds:
+    -world
